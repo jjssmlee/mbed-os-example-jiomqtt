@@ -28,7 +28,7 @@
             "platform.stdio-convert-newlines": true,
             "platform.stdio-baud-rate": 115200,
             "platform.default-serial-baud-rate": 115200,
-            "platform.stdio-buffered-serial": false,
+            "platform.stdio-buffered-serial": true,
             "cellular.debug-at": false,
             "nsapi.default-cellular-plmn": 0,
             "nsapi.default-cellular-sim-pin": 0,

@@ -1,6 +1,16 @@
 #include "mbed.h"
 #include "jio_utils/jio_utils.h"
 #include "netsocket/nsapi_types.h"
+#include "common_functions.h"
+#include "UDPSocket.h"
+#include "CellularLog.h"
+#include "CellularContext.h"
+
+#define UDP 0
+#define TCP 1
+
+// Number of retries /
+#define RETRY_COUNT 3
 
 #define MQTT_SERVER_IP_ADDR		"39.105.204.1"
 #define MQTT_SERVER_PORT		"1883"
@@ -126,6 +136,7 @@ int jiot_mqtt_client_set_callbacks(jiot_client_MQTT_Hndl_t handle)
 	return result;
 }
 
+#ifdef MBED_CONF_APP_WIFI_SSID
 int network_connect(void)
 {
 	int ret = 0;
@@ -154,6 +165,33 @@ int network_connect(void)
 
 	return ret;
 }
+#else
+NetworkInterface *iface;
+nsapi_error_t network_connect()
+{
+    nsapi_error_t retcode = NSAPI_ERROR_OK;
+    uint8_t retry_counter = 0;
+
+    iface = NetworkInterface::get_default_instance();
+
+    while (iface->get_connection_status() != NSAPI_STATUS_GLOBAL_UP) {
+        retcode = iface->connect();
+        if (retcode == NSAPI_ERROR_AUTH_FAILURE) {
+            printf("\n\nAuthentication Failure. Exiting application\n");
+        } else if (retcode == NSAPI_ERROR_OK) {
+            printf("\n\nConnection Established.\n");
+        } else if (retry_counter > RETRY_COUNT) {
+            printf("\n\nFatal connection failure: %d\n", retcode);
+        } else {
+            printf("\n\nCouldn't connect: %d, will retry\n", retcode);
+            retry_counter++;
+            continue;
+        }
+        break;
+    }
+    return retcode;
+}
+#endif
 
 int main()
 {
